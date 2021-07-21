@@ -1,0 +1,240 @@
+// ---------------------------------------------------------------------------------
+// libUart.c
+// Created on: 07-Jan-2010
+// Author: nbk
+// Desc  :
+// UARTx_init() to initialise UARTx
+// RXCharISR() & TxCharISR() to get receive/transmit char from/to UART
+// GetChar() & PutChar() to get or put char on stdio.
+// ---------------------------------------------------------------------------------
+#include "main.h"
+#include <stdio.h>
+extern UART_HandleTypeDef huart1;
+//#define UART_STDIO 	&huart1			//To store the STDIO UART
+#define UART_STDIO	1
+#define FALSE		0
+#define TRUE		1
+
+int RxCharISR(int16_t uartNum);
+
+// These variables are used for UART ISR transmit & receive buffers
+#define BUFSIZE		128
+static unsigned char rxBuffer[3][BUFSIZE];
+static unsigned char txBuffer[3][BUFSIZE];
+volatile static int16_t rxReadIndex[3], rxWriteIndex[3];
+volatile static int16_t txReadIndex[3], txWriteIndex[3];
+int8_t txEnableFlag[5];
+
+USART_TypeDef* usartLut[5] = {USART1, USART2, USART3 };
+int16_t usartIRQnLut[5] = {USART1_IRQn, USART2_IRQn,USART3_IRQn };
+int16_t UART_STDIO;			//To store the STDIO UART number
+
+// ---------------------------------------------------------------------------------
+// @brief : To init one of the UART as STDIO port (for printf(), GetChar() etc)
+// @param : uartNum - uart port number (1-USART1, 2-USART2, etc...)
+//		  : baudrate
+// @retval: none
+void STDIO_init( ) {
+
+    // turn off buffers, so IO occurs immediately
+    setvbuf(stdin, NULL, _IONBF, 0);
+    setvbuf(stdout, NULL, _IONBF, 0);
+    setvbuf(stderr, NULL, _IONBF, 0);
+}
+
+// ---------------------------------------------------------------------------------
+// @brief : To get a character from stdio, which is UART_STDIO
+// @param : none
+// @retval: character received
+int GetChar() {
+	return RxCharISR(UART_STDIO);				//isr version
+//	return RxChar(usartLut[UART_STDIO]);		//Polling version
+}
+
+// ---------------------------------------------------------------------------------
+// @brief : To put a character into stdio, which is UART_STDIO
+// @param c: character to send
+// @retval: none
+int PutChar(int c) {
+	return TxCharISR(UART_STDIO,(char)c);				//isr version
+	//return TxChar(usartLut[UART_STDIO], c);	//Polling version
+}
+// ---------------------------------------------------------------------------------
+// @brief : To send a string to stdio, which is UART1
+// @param s : string to send
+// @retval: none
+int puts(const char *s) {
+	while(*s)
+		PutChar(*s++);
+	PutChar('\n');
+	return 0;
+}
+
+// ---------------------------------------------------------------------------------
+// @brief : To check if a rx character from UART is available
+// @param : uartNum is the USART number minus 1, so USART1 -> 0
+// @retval: TRUE if character is available, else FALSE
+int8_t RxCharAvailableISR(int16_t uartNum) {
+
+	uartNum--;
+	return rxWriteIndex[uartNum]!=rxReadIndex[uartNum];
+}
+// ---------------------------------------------------------------------------------
+// @brief : To get a character from UART through interrupt
+// @param : uartNum is the USART number minus 1, so USART1 -> 0
+// @retval: character received
+int RxCharISR(int16_t uartNum) {
+	unsigned char ch;
+
+	uartNum--;
+	while(rxWriteIndex[uartNum]==rxReadIndex[uartNum]);
+
+	ch = rxBuffer[uartNum][rxReadIndex[uartNum]];
+
+	rxReadIndex[uartNum]++;
+
+	if (rxReadIndex[uartNum]>=BUFSIZE)
+		rxReadIndex[uartNum]=0;
+	return ch;
+}
+
+// ---------------------------------------------------------------------------------
+// @brief : To put a character into usart through interrupt
+// @param : c-character to send, usartNum-usart#
+// @retval: none
+int TxCharISR(int16_t uartNum, char c) {
+
+	uartNum--;
+	// If tx buffer is full, wait
+	while((txWriteIndex[uartNum]==(txReadIndex[uartNum]-1)) ||
+		(txWriteIndex[uartNum]==(txReadIndex[uartNum]+BUFSIZE-1)) ) {
+
+//		if (bSWFlag) {
+//			break;
+//		}
+	}
+
+
+	txBuffer[uartNum][txWriteIndex[uartNum]] = c;
+//DI;
+	txWriteIndex[uartNum]++;
+
+	if (txWriteIndex[uartNum]>=BUFSIZE)
+		txWriteIndex[uartNum]=0;
+//EI;
+	if (!txEnableFlag[uartNum]) {
+		// turn ON tx interrupt to begin the transfer
+		txEnableFlag[uartNum] = TRUE;
+		USART_ITConfig(usartLut[uartNum], UART_IT_TXE, ENABLE);
+	}
+	return c;
+}
+
+// @brief : To check if a character is available for reading
+// @param : none
+// @retval: true if character is available, else false.
+int8_t kbhit(){
+	return (rxWriteIndex[UART_STDIO-1]!=rxReadIndex[UART_STDIO-1]);
+//	return (USART_GetFlagStatus(USART1, USART_IT_RXNE) != RESET);
+}
+
+#ifdef POLLING
+// @brief : To get a character from UART through polling
+// @param : none
+// @retval: character received
+int RxChar(USART_TypeDef* usart) {
+	while(USART_GetFlagStatus(usart, USART_IT_RXNE) == RESET);
+	return USART_ReceiveData(usart);
+}
+
+// ---------------------------------------------------------------------------------
+// @brief : To put a character into UART through polling
+// @param c: character to send
+// @retval: none
+int TxChar(USART_TypeDef* usart, char c) {
+	while(USART_GetFlagStatus(usart, USART_FLAG_TXE) == RESET);
+   	USART_SendData(usart,c);
+   	return 0;
+}
+#endif
+
+
+
+
+
+// @brief : General usart ISR
+// @param : uartNum is the USART number minus 1, so USART1 -> 0
+// @retval: none
+void USART_ISR(int16_t uartNum) {
+	char ch;
+	USART_TypeDef*	uart;
+
+	uartNum--;	// base zero
+	uart = usartLut[uartNum];
+
+	if (USART_GetITStatus(uart, UART_IT_RXNE)==SET)
+	{
+		rxBuffer[uartNum][rxWriteIndex[uartNum]++] = LL_USART_ReceiveData8(uart);
+
+		if (rxWriteIndex[uartNum]>=BUFSIZE)
+			rxWriteIndex[uartNum]=0;
+	}
+
+	if (USART_GetITStatus(uart, UART_IT_TXE)==SET) {
+
+		if (txWriteIndex[uartNum]!=txReadIndex[uartNum]) {
+
+			ch = txBuffer[uartNum][txReadIndex[uartNum]];
+
+			LL_USART_TransmitData8(uart, ch);
+
+			txReadIndex[uartNum]++;
+			if (txReadIndex[uartNum]>=BUFSIZE)
+				txReadIndex[uartNum]=0;
+
+		}
+		else {
+
+		    USART_ITConfig(uart, UART_IT_TXE, DISABLE);
+		    txEnableFlag[uartNum] = FALSE;
+		}
+
+	}
+}
+
+// @brief : usart1 ISR handler. Uses USART_ISR(n) for sevice.
+// Uses common USART_ISR() routine.
+// If necessary, modify codes here for customised operation.
+void USART1_IRQHandler(void){
+	USART_ISR(1);
+}
+
+void USART2_IRQHandler(void){
+	USART_ISR(2);
+}
+
+void USART3_IRQHandler(void){
+	USART_ISR(3);
+}
+
+
+
+// ---------------------------------------------------------------------------------
+// @brief : To get a character from stdio, which is UART_STDIO
+// @param : none
+// @retval: character received
+int __io_getchar() {
+	uint8_t c;
+	HAL_UART_Receive_IT(UART_STDIO, &c, 1);
+	return c;
+}
+
+// ---------------------------------------------------------------------------------
+// @brief : To put a character into stdio, which is UART_STDIO
+// @param c: character to send
+// @retval: none
+
+int __io_putchar(uint8_t c) {
+	return HAL_UART_Transmit_IT(UART_STDIO, (uint8_t *) &c, 1);//, 10);
+}
+

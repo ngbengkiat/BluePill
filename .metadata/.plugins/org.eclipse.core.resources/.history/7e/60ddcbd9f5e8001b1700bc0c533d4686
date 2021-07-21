@@ -1,0 +1,45 @@
+// ---------------------------------------------------------------------------------
+// File        :libIO.c
+// Date        :06Feb2011
+// Author      :NgBK
+// Description :All other IO initialisation functions are called from InitIO();
+// InitIO() should be the first function to be called from main()
+// ---------------------------------------------------------------------------------
+#include "main.h"
+
+// @brief : Initialise all IO periperhals and port pins
+// @param : none
+// @retval: none
+void InitIO() {
+	DI;
+	stm32_init();
+
+	// All general input and output port pins
+	GPIO_Init_Mode(LED0_PIN, GPIO_Mode_OUT, GPIO_OType_OD, GPIO_PuPd_NOPULL);
+	GPIO_Init_Mode(LED1_PIN, GPIO_Mode_OUT, GPIO_OType_OD, GPIO_PuPd_NOPULL);
+
+	// serial port for downloading program and debugging
+	STDIO_init(1, 57600);
+
+	InitMotor();
+
+	// Must be here after new gnu arm compiler to work properly.
+	SensorInit();
+
+   	// User switch input
+	InitSwitch();
+
+	InitBeeper();
+
+	//InitTimer6_1msISR();
+
+	// dotmatrix display or serial display on winM3
+   	DispInit();
+   	PulseLED(0, 200);
+   	PulseLED(1, 200);
+	EI;
+	DelaymSec(20);
+	// Must be here after interrupts are enabled as MPU6000Init() makes use of DelaymSec()
+	// 3 axis accelerometer and 3 axis gyro
+	MPU6000Init();
+}

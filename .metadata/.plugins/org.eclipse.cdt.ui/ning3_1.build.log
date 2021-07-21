@@ -1,0 +1,9 @@
+22:07:41 **** Build of configuration Release for project ning3_1 ****
+make all 
+Cannot run program "make": Launching failed
+
+Error: Program "make" not found in PATH
+PATH=[C:/ST/STM32CubeIDE_1.6.1/STM32CubeIDE//plugins/com.st.stm32cube.ide.jre.win64_1.6.0.202102191308/jre/bin/client;C:/ST/STM32CubeIDE_1.6.1/STM32CubeIDE//plugins/com.st.stm32cube.ide.jre.win64_1.6.0.202102191308/jre/bin;C:\Program Files (x86)\VMware\VMware Player\bin\;C:\Program Files\Python38\Scripts\;C:\Program Files\Python38\;C:\Program Files\National Instruments\Shared\OpenVINO\;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\Program Files\NVIDIA Corporation\NVIDIA NvDLISR;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Users\Public\wpilib\2020\roborio\bin;C:\Users\Public\wpilib\2020\frccode;C:\Program Files\PuTTY\;C:\Program Files\Git\cmd;C:\Program Files (x86)\Intel\Intel(R) Management Engine Components\DAL;C:\Program Files\Intel\Intel(R) Management Engine Components\DAL;C:\Users\User\AppData\Local\Microsoft\WindowsApps;C:\Users\Public\wpilib\2020\roborio\bin;C:\Users\Public\wpilib\2020\frccode;C:\ST\STM32CubeIDE_1.6.1\STM32CubeIDE]
+
+22:07:42 Build Failed. 1 errors, 0 warnings. (took 171ms)
+
