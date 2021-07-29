@@ -19,13 +19,13 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "i2c.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "project.h"
 #include <string.h>
 /* USER CODE END Includes */
 
@@ -93,41 +93,23 @@ int main(void)
   MX_TIM2_Init();
   MX_TIM3_Init();
   MX_USART2_UART_Init();
+  MX_I2C2_Init();
   /* USER CODE BEGIN 2 */
-  STDIO_init();
+
+  setup();
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
-
-
-  clrscr();
-  printf("Hello World! %s", __DATE__ __TIME__);
-  int i=0;
+  while(1){
+	  TestMotorMenu();
+  }
   while (1)
   {
-	  char s[] = "finally...\n";
-	  //char c = __io_getchar();
-//	  putchar(c);
-//	  putchar(c);
-//	  putchar('\n');
-	  gotoxy(5,5);
-	  printf("enc=%6d %6d", (int16_t)LL_TIM_GetCounter(TIM2), (int16_t)LL_TIM_GetCounter(TIM3));
-	  gotoxy(5,7);
-	  printf("i=%d",i++);
+	  loop();
 
-      // LED ON
-      //HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_SET);
-	  LL_TIM_OC_SetCompareCH1(TIM4, 200);
-	  LL_TIM_OC_SetCompareCH2(TIM4, 200);
-      //HAL_Delay(100);
-      // LED OFF
-      //HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_RESET);
-//	  LL_TIM_OC_SetCompareCH1(TIM4, 800);
-//	  LL_TIM_OC_SetCompareCH2(TIM4, 800);
-//      HAL_Delay(100);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

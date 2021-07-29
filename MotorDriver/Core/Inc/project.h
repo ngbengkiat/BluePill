@@ -9,13 +9,16 @@
 #ifndef __PROJECT_H___
 #define __PROJECT_H___
 
-
-#define RobotNumber			2
 #include <stdio.h>
 #include <math.h>
+#include "ssd1306.h"
+#include "l3gd20.h"
+#include "libMotor.h"
+#include "libLogData.h"
 
-#define FALSE 	false
-#define TRUE	true
+
+#define FALSE		0
+#define TRUE		1
 
 #define MHZ						1000000L
 #define dT	0.001f
@@ -30,6 +33,15 @@ typedef void (*type_fp) (void);
 //  Macros
 // ---------------------------------------------------------------------------------
 
+// IO pins definition. These macros make it easier to write & modify your program
+#define LED0_PIN		GPIOB,GPIO_PIN_2
+#define LMOTORDIR_PIN	GPIOB, GPIO_PIN_4
+#define RMOTORDIR_PIN	GPIOB, GPIO_PIN_5
+
+#define GPIO_Write_1(GPIOx, PinMask)	WRITE_REG(GPIOx->BSRR, (PinMask) & 0x0000FFFFU)
+#define GPIO_Write_0(GPIOx, PinMask)	WRITE_REG(GPIOx->BRR, (PinMask) & 0x0000FFFFU)
+#define GPIO_Write(pin, value)			(value)==1?GPIO_Write_1(pin):GPIO_Write_0(pin)
+
 #define DI			__disable_irq()
 #define EI			__enable_irq()
 #define ABS(n)		((n)>=0?(n):(-n))		// Get absolute value
@@ -43,13 +55,6 @@ typedef void (*type_fp) (void);
 #define Limit1800Deg(a)	( ((a)>1800) ? (-3600+(a)) : ( (a)<-1800 ? (3600+(a)) : (a) ) )
 
 
-// IO pins definition. These macros make it easier to write & modify your program
-#define LED0_PIN		GPIOB,GPIO_Pin_7
-#define LED1_PIN		GPIOA,GPIO_Pin_13
-
-
-#define LMOTORDIR_PIN	GPIOB, GPIO_Pin_10
-#define RMOTORDIR_PIN	GPIOA, GPIO_Pin_12
 
 
 // ---------------------------------------------------------------------------------
@@ -57,12 +62,13 @@ typedef void (*type_fp) (void);
 // ---------------------------------------------------------------------------------
 
 extern char s[80];
-
+extern GYRO_DrvTypeDef  *GyroDrv;
 
 // ---------------------------------------------------------------------------------
 //  Function prototypes
 // ---------------------------------------------------------------------------------
-
+void setup();
+void loop();
 
 /* Motor related routines (motor.c) */
 void InitMotor(void);		/* motor initialisation */

@@ -1,2 +1,0 @@
-libStdio.c:127:6:clrscr	8	static
-libStdio.c:137:6:gotoxy	16	static

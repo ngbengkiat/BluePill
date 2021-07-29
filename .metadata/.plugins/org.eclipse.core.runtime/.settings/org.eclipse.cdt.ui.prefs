@@ -1,4 +1,5 @@
-content_assist_category_order=org.eclipse.cdt.ui.templateProposalCategory\:0\u0000org.eclipse.cdt.ui.parserProposalCategory\:1\u0000org.eclipse.cdt.ui.helpProposalCategory\:2\u0000org.eclipse.cdt.ui.textProposalCategory\:65538\u0000
+content_assist_category_order=org.eclipse.cdt.ui.parserProposalCategory\:65539\u0000org.eclipse.cdt.ui.textProposalCategory\:65541\u0000org.eclipse.cdt.ui.templateProposalCategory\:2\u0000org.eclipse.cdt.ui.helpProposalCategory\:5\u0000
+content_assist_disabled_computers=org.eclipse.cdt.ui.textProposalCategory\u0000
 content_assist_order_proposals=true
 content_assist_proposals_timeout=5000
 eclipse.preferences.version=1

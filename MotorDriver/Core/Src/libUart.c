@@ -8,14 +8,13 @@
 // GetChar() & PutChar() to get or put char on stdio.
 // ---------------------------------------------------------------------------------
 #include "main.h"
+#include "project.h"
 #include <stdio.h>
 
-#define FALSE		0
-#define TRUE		1
 
 //Change UART_STDIO according to UART used
 //uartNum is the USART number minus 1, so USART1 -> 0
-int16_t UART_STDIO = 1;			//To store the STDIO UART number
+int16_t UART_STDIO = 0;			//To store the STDIO UART number
 
 // These variables are used for UART ISR transmit & receive buffers
 #define BUFSIZE		64
@@ -88,12 +87,12 @@ int TxCharISR(int16_t uartNum, char c) {
 
 	txBuffer[uartNum][txWriteIndex[uartNum]] = c;
 
-	__disable_irq();
+	DI;
 	txWriteIndex[uartNum]++;
 
 	if (txWriteIndex[uartNum]>=BUFSIZE)
 		txWriteIndex[uartNum]=0;
-	__enable_irq();
+	EI;
 
 	if (!txEnableFlag[uartNum]) {
 		// turn ON tx interrupt to begin the transfer
@@ -144,25 +143,20 @@ void USART_ISR(int16_t uartNum) {
 
 	uart = usartLut[uartNum];
 
-	if (LL_USART_IsEnabledIT_ERROR(uart)==SET) {
-		//HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_SET);
+	if (LL_USART_IsActiveFlag_ORE(uart)==SET) {
 		LL_USART_ClearFlag_ORE(uart) ;
 		LL_USART_ReceiveData8(uart);
 	}
 
-	//if (LL_USART_IsActiveFlag_RXNE(uart)==SET)
-	if (LL_USART_IsEnabledIT_RXNE(uart)==SET)
+	if (LL_USART_IsActiveFlag_RXNE(uart)==SET)
 	{
-		LL_USART_ClearFlag_RXNE(uart) ;
-		//HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_SET);
 		rxBuffer[uartNum][rxWriteIndex[uartNum]++] = LL_USART_ReceiveData8(uart);
 
 		if (rxWriteIndex[uartNum]>=BUFSIZE)
 			rxWriteIndex[uartNum]=0;
 	}
 
-	if (LL_USART_IsEnabledIT_TXE(uart)==SET) {
-		//HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_RESET);
+	if (LL_USART_IsActiveFlag_TXE(uart)==SET) {
 
 		if (txWriteIndex[uartNum]!=txReadIndex[uartNum]) {
 
